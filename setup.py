@@ -11,7 +11,7 @@ install_requires = [
 
 setup(
     name='sentry-notify-github-issues',
-    version='0.0.1',
+    version='0.0.2',
     author='Yoshiori Shoji',
     author_email='yoshiori@gmail.com',
     url='http://github.com/yoshiori/sentry-notify-github-issues',
