@@ -1,6 +1,7 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 from sentry.plugins.bases.notify import NotificationPlugin
+from sentry.models import Activity
 from sentry.utils.strings import strip
 from sentry.utils import json
 import urllib2
@@ -26,7 +27,7 @@ class NotifyGitHubIssuesForm(forms.Form):
 
 class NotifyGitHubIssuesPlugin(NotificationPlugin):
     slug = 'notify-github-issues'
-    title = _('GitHub Issues notification')
+    title = _('GitHub Issues Notification')
     author = 'Yoshiori SHOJI'
     author_url = 'https://github.com/yoshiori'
     version = sentry_notify_github_issues.VERSION
@@ -58,5 +59,21 @@ class NotifyGitHubIssuesPlugin(NotificationPlugin):
         req.add_header('User-Agent', 'sentry-notify-github-issues/%s' % self.version)
         req.add_header('Authorization', 'token %s' % self.get_option('access_token', group.project))
         req.add_header('Content-Type', 'application/json')
+        resp = urllib2.urlopen(req)
+        data = json.loads(resp.read())
 
-        return urllib2.urlopen(req)
+        self.create_sentry_issue(group, data["title"], data["html_url"], "GH-%s" % data["number"])
+
+    def create_sentry_issue(self, group, title, location, label):
+        issue_information = {
+            'title': title,
+            'provider': self.get_title(),
+            'location': location,
+            'label': label,
+        }
+        Activity.objects.create(
+            project=group.project,
+            group=group,
+            type=Activity.CREATE_ISSUE,
+            data=issue_information,
+        )
