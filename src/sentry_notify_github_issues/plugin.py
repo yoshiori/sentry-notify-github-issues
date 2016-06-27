@@ -39,6 +39,9 @@ class NotifyGitHubIssuesPlugin(NotificationPlugin):
     conf_key = slug
     project_conf_form = NotifyGitHubIssuesForm
 
+    def is_configured(self, project):
+        return all((self.get_option(k, project) for k in ('repo', 'access_token')))
+
     def notify_users(self, group, event, fail_silently=False):
         repo = self.get_option('repo', group.project)
         api_endpoint = self.get_option('api_endpoint', group.project) or "https://api.github.com/"
